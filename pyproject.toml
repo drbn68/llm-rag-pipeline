@@ -1,0 +1,24 @@
+[project]
+name = "llm-rag-app"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "drbn68",email = "emberizacirlus@yahoo.es"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "transformers (>=4.48.3,<5.0.0)",
+    "langchain (>=0.3.18,<0.4.0)",
+    "faiss-cpu (>=1.10.0,<2.0.0)",
+    "boto3 (>=1.36.16,<2.0.0)",
+    "sagemaker (>=2.239.0,<3.0.0)",
+    "zenml (>=0.74.0,<0.75.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "fastapi (>=0.115.8,<0.116.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
