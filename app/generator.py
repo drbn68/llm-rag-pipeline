@@ -8,45 +8,31 @@ load_dotenv()
 # ✅ Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def generate_answer(context, question):
-    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+def truncate_context(context, max_tokens=15000):
+    tokens = context.split()
+    if len(tokens) > max_tokens:
+        return " ".join(tokens[:max_tokens])
+    return context
 
+def generate_answer(context, question, max_tokens=1000):
+    from openai import OpenAI
+    import os
+
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt}
     ]
 
-    # ✅ Initial request
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=messages,
-        max_tokens=1500,
-        temperature=0.85,  # Increased for diversity
+        max_tokens=max_tokens,
+        temperature=0.7,
     )
 
-    # ✅ Capture the first response
-    answer = response.choices[0].message.content.strip()
-
-    # ✅ Continuation logic with more dynamic prompting
-    while response.choices[0].finish_reason != 'stop':
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"Continue elaborating on this response without repeating:\n\n{answer}"}
-        ]
-
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            max_tokens=1000,
-            temperature=0.85,
-        )
-
-        continuation = response.choices[0].message.content.strip()
-
-        # ✅ Avoid appending if it's a duplicate
-        if continuation in answer:
-            break
-
-        answer += " " + continuation
+    return response.choices[0].message.content.strip()
 
     return answer
