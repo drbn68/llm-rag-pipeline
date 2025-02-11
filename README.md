@@ -10,8 +10,8 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 3. [Project Structure](#project-structure)  
 4. [Pipeline Overview](#pipeline-overview)  
 5. [Components Breakdown](#components-breakdown)  
-6. [Usage Instructions](#usage-instructions)  
-7. [Logging and Monitoring](#logging-and-monitoring)  
+6. [Workflow Explanation](#workflow-explanation)  
+7. [Usage Instructions](#usage-instructions)  
 8. [Troubleshooting](#troubleshooting)  
 9. [Contributing](#contributing)  
 10. [License](#license)
@@ -23,7 +23,6 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 - Dynamic Q&A based on document content.
 - Summarization of documents using GPT-4o.
 - Built on a robust ZenML pipeline.
-- Detailed logging for monitoring and debugging.
 
 ---
 
@@ -31,7 +30,7 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 
 ### 1️⃣ **Clone the Repository:**
 ```bash
-git clone https://github.com/drbn68/llm-rag-app.git
+git clone https://github.com/yourusername/llm-rag-app.git
 cd llm-rag-app
 ```
 
@@ -51,7 +50,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 4️⃣ **Run the App:**
 ```bash
-poetry run uvicorn app.main:app --reload --log-level debug
+poetry run uvicorn app.main:app --reload
 ```
 Visit: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
@@ -65,7 +64,6 @@ llm-rag-app/
 │   ├── retriever.py     # Handles document retrieval with FAISS
 │   ├── generator.py     # Generates answers using OpenAI GPT-4o
 │   ├── rag_pipeline.py  # ZenML pipeline orchestration
-│   └── logs/            # Directory for log files (e.g., app.log)
 ├── .env                 # API keys
 ├── README.md            # Project documentation
 ├── poetry.lock          # Poetry dependencies lock file
@@ -110,6 +108,60 @@ The application follows the **RAG (Retrieval-Augmented Generation)** pattern, or
 
 ---
 
+## 🔗 **Workflow Explanation**
+
+### 📥 **1. User Uploads a PDF and Submits a Question**
+- **Endpoint Triggered:** `POST /ask` in `main.py`
+- **Inputs:**
+  - **PDF file**: Uploaded by the user.
+  - **Question**: Submitted through the form.
+
+### 🚀 **2. FastAPI Handles the Request (`main.py`)**
+- **Temporary File Creation:** 
+  - The uploaded PDF is saved temporarily on the server.
+- **Pipeline Trigger:**
+  - A unique run ID is generated using `uuid`.
+  - The `rag_pipeline` function is called with the PDF file path and the user's question as arguments.
+
+### 🔄 **3. RAG Pipeline Starts (`rag_pipeline.py`)**
+The pipeline orchestrates three main steps:
+
+1. **Retriever Step (`retriever.py`):**
+   - **PDF Reading:** Extracts the text content from the uploaded PDF.
+   - **Text Splitting:** Breaks the text into smaller chunks for efficient processing.
+   - **Embedding Generation:** Converts text chunks into numerical vector representations (embeddings).
+   - **FAISS Indexing:** Creates an index using FAISS for fast retrieval of relevant chunks based on similarity to the question.
+
+2. **Context Combination Step:**
+   - **Query Processing:** Takes the user's question and searches the FAISS index for the most relevant text chunks.
+   - **Context Assembly:** Combines these chunks into a single context string to be used by the language model.
+
+3. **Generation Step (`generator.py`):**
+   - **Prompt Creation:** Constructs a prompt using the retrieved context and the user's question.
+   - **Answer Generation:** Sends the prompt to OpenAI’s GPT-4 model to generate a comprehensive, context-aware answer.
+
+### 📤 **4. Retrieving the Pipeline Output (`main.py`)**
+- **Pipeline Monitoring:**
+  - The app waits for the pipeline to complete and fetches the output of the `generation_step`.
+- **Artifact Loading:**
+  - The generated answer is retrieved from the output artifact using `BuiltInMaterializer`.
+
+### 🗑️ **5. Response & Cleanup**
+- **Response:** 
+  - The generated answer is returned to the user as a JSON response.
+- **File Cleanup:** 
+  - The temporary PDF file is deleted from the server to save space.
+
+### 📝 **Summary of the Flow**
+
+1. **`main.py`**: Handles the request, saves the PDF, and triggers the pipeline.
+2. **`rag_pipeline.py`**: Orchestrates the pipeline steps.
+3. **`retriever.py`**: Extracts, splits, and indexes PDF content with FAISS.
+4. **`generator.py`**: Generates an answer using the retrieved content and GPT-4.
+5. **`main.py`**: Retrieves the final output, sends it back to the user, and cleans up.
+
+---
+
 ## 📥 **Usage Instructions**
 
 1. **Access API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
@@ -122,43 +174,13 @@ The application follows the **RAG (Retrieval-Augmented Generation)** pattern, or
 
 ---
 
-## 📊 **Logging and Monitoring**
-
-The app includes robust logging features to track API requests, pipeline executions, and debugging information.
-
-### 🔍 **Log Details:**
-- All logs are saved in `app/logs/app.log`.
-- Logs include request details, pipeline run statuses, and errors.
-
-### 🗒️ **Log Configuration:**
-The logging configuration can be found in `main.py`:
-```python
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("app/logs/app.log", mode='w'),
-        logging.StreamHandler()
-    ]
-)
-```
-
-To run with debug logging:
-```bash
-poetry run uvicorn app.main:app --reload --log-level debug
-```
-
----
-
 ## 🛠️ **Troubleshooting**
-
 - **Common Errors:**
   - `Invalid 'max_tokens'`: Adjust token calculation logic.
   - `Server Error: ArtifactVersionResponse`: Ensure ZenML artifact loading is correct.
 - **Debugging Tips:**
-  - Check `app/logs/app.log` for detailed logs.
-  - Use `traceback` for error tracking.
-  - Verify `.env` file for correct API key.
+  - Use `traceback` for detailed error logs.
+  - Check `.env` file for API key issues.
 
 ---
 
@@ -173,15 +195,12 @@ poetry run uvicorn app.main:app --reload --log-level debug
    ```bash
    git commit -m "Add new feature"
    ```
-4. Push and create a pull request:
-   ```bash
-   git push origin feature-branch
-   ```
+4. Push and create a pull request.
 
 ---
 
 ## 📜 **License**
 This project is licensed under the **MIT License**.
 
-> Built with FastAPI, ZenML, and OpenAI GPT-4o.
+> Built with ❤️ using FastAPI, ZenML, and OpenAI GPT-4o.
 
