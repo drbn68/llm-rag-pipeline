@@ -3,7 +3,7 @@ name = "llm-rag-app"
 version = "0.1.0"
 description = "RAG application using AWS, LangChain, FAISS, and ZenML"
 authors = [
-    {name = "drbn68", email = ""}
+    {name = "drbn68", email = "xxx@example.net"}
 ]
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
