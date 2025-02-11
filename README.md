@@ -11,9 +11,10 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 4. [Pipeline Overview](#pipeline-overview)  
 5. [Components Breakdown](#components-breakdown)  
 6. [Usage Instructions](#usage-instructions)  
-7. [Troubleshooting](#troubleshooting)  
-8. [Contributing](#contributing)  
-9. [License](#license)
+7. [Logging and Monitoring](#logging-and-monitoring)  
+8. [Troubleshooting](#troubleshooting)  
+9. [Contributing](#contributing)  
+10. [License](#license)
 
 ---
 
@@ -22,6 +23,7 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 - Dynamic Q&A based on document content.
 - Summarization of documents using GPT-4o.
 - Built on a robust ZenML pipeline.
+- Detailed logging for monitoring and debugging.
 
 ---
 
@@ -29,7 +31,7 @@ Welcome to the **LLM-RAG App** repository! This project leverages **ZenML** for 
 
 ### 1️⃣ **Clone the Repository:**
 ```bash
-git clone https://github.com/yourusername/llm-rag-app.git
+git clone https://github.com/drbn68/llm-rag-app.git
 cd llm-rag-app
 ```
 
@@ -49,7 +51,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 4️⃣ **Run the App:**
 ```bash
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --reload --log-level debug
 ```
 Visit: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
@@ -63,6 +65,7 @@ llm-rag-app/
 │   ├── retriever.py     # Handles document retrieval with FAISS
 │   ├── generator.py     # Generates answers using OpenAI GPT-4o
 │   ├── rag_pipeline.py  # ZenML pipeline orchestration
+│   └── logs/            # Directory for log files (e.g., app.log)
 ├── .env                 # API keys
 ├── README.md            # Project documentation
 ├── poetry.lock          # Poetry dependencies lock file
@@ -119,13 +122,43 @@ The application follows the **RAG (Retrieval-Augmented Generation)** pattern, or
 
 ---
 
+## 📊 **Logging and Monitoring**
+
+The app includes robust logging features to track API requests, pipeline executions, and debugging information.
+
+### 🔍 **Log Details:**
+- All logs are saved in `app/logs/app.log`.
+- Logs include request details, pipeline run statuses, and errors.
+
+### 🗒️ **Log Configuration:**
+The logging configuration can be found in `main.py`:
+```python
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app/logs/app.log", mode='w'),
+        logging.StreamHandler()
+    ]
+)
+```
+
+To run with debug logging:
+```bash
+poetry run uvicorn app.main:app --reload --log-level debug
+```
+
+---
+
 ## 🛠️ **Troubleshooting**
+
 - **Common Errors:**
   - `Invalid 'max_tokens'`: Adjust token calculation logic.
   - `Server Error: ArtifactVersionResponse`: Ensure ZenML artifact loading is correct.
 - **Debugging Tips:**
-  - Use `traceback` for detailed error logs.
-  - Check `.env` file for API key issues.
+  - Check `app/logs/app.log` for detailed logs.
+  - Use `traceback` for error tracking.
+  - Verify `.env` file for correct API key.
 
 ---
 
@@ -140,12 +173,15 @@ The application follows the **RAG (Retrieval-Augmented Generation)** pattern, or
    ```bash
    git commit -m "Add new feature"
    ```
-4. Push and create a pull request.
+4. Push and create a pull request:
+   ```bash
+   git push origin feature-branch
+   ```
 
 ---
 
 ## 📜 **License**
 This project is licensed under the **MIT License**.
 
-> Built with ❤️ using FastAPI, ZenML, and OpenAI GPT-4o.
+> Built with FastAPI, ZenML, and OpenAI GPT-4o.
 
